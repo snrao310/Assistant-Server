@@ -2,6 +2,7 @@ import {Logger} from "../Utils/Logger";
 import * as http from "http";
 import {RestServices} from "./RestServices";
 import {CloudTextToSpeechConverter} from "../SpeechConverstion/CloudTextToSpeechConverter";
+import {NLU} from "../NLU/NLU";
 
 
 export class ClientConnection{
@@ -17,9 +18,11 @@ export class ClientConnection{
                         let userMessage: string = data.body.message;
 
                         //call the real stuff here (NLU, Action Mapping, Action Excecution, Response Creation)
+                        NLU.getNLUResponse(userMessage,socket);
 
-                        let speech: any = await CloudTextToSpeechConverter.getSpeech(userMessage);
-                        socket.emit('serverMessage', {message: speech});
+
+                        // let speech: any = await CloudTextToSpeechConverter.getSpeech(NLUResponse.result.fulfillment.speech);
+                        // socket.emit('serverMessage', {message: speech});
                     }
                 });
 

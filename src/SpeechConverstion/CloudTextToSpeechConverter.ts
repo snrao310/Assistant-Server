@@ -4,6 +4,11 @@ import {isNullOrUndefined} from "util";
 const textToSpeech = require('@google-cloud/text-to-speech');
 // Creates a client
 const client = new textToSpeech.TextToSpeechClient();
+const languageCode: string = "en-US";
+const voiceName: string = "en-US-Wavenet-D";
+const audioEncoding: string = "MP3";
+const pitch: string = "-7.20";
+const speakingRate: string = "1.34";
 
 
 export class CloudTextToSpeechConverter {
@@ -16,9 +21,16 @@ export class CloudTextToSpeechConverter {
             // Select the language and SSML Voice Gender (optional)
             //use languageCode en-US-Wavenet-D for wavenet voice
             //gender and voice options are all given here
-            voice: {languageCode: 'en-US', ssmlGender: 'NEUTRAL'},
+            voice: {
+                languageCode: languageCode,
+                name: voiceName
+            },
             // Select the type of audio encoding
-            audioConfig: {audioEncoding: 'MP3'},
+            audioConfig: {
+                audioEncoding: audioEncoding,
+                pitch: pitch,
+                speakingRate: speakingRate
+            }
         };
 
         // Performs the Text-to-Speech request

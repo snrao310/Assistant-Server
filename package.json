@@ -9,6 +9,7 @@
   "dependencies": {
     "@google-cloud/text-to-speech": "^0.1.0",
     "@types/node": "^9.6.1",
+    "apiai": "^4.0.3",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",
