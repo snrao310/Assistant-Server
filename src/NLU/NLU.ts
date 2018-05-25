@@ -14,7 +14,7 @@ export class NLU {
          request.on('response', async function(response) {
             console.log(response);
              let speech: any = await CloudTextToSpeechConverter.getSpeech(response.result.fulfillment.speech);
-             socket.emit('serverMessage', {message: speech});
+             socket.emit('serverMessage', {text: response.result.fulfillment.speech, message: speech});
          });
 
         request.on('error', function(error) {
