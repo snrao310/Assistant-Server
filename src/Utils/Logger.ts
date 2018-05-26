@@ -13,4 +13,11 @@ export class Logger{
         console.log("debug: "+ message)
     }
 
+    public static getString(data: any){
+        if(typeof data == "object"){
+            return JSON.stringify(data);
+        }
+        return data;
+    }
+
 }

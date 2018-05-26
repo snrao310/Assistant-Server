@@ -1,9 +1,11 @@
 import {Logger} from "../Utils/Logger";
 import * as http from "http";
 import {RestServices} from "./RestServices";
-import {CloudTextToSpeechConverter} from "../SpeechConverstion/CloudTextToSpeechConverter";
 import {NLU} from "../NLU/NLU";
-
+import {Session} from "../Session/Session";
+import {Cache} from "../Cache/Cache";
+import {isNullOrUndefined} from "util";
+import {CloudTextToSpeechConverter} from "../SpeechConverstion/CloudTextToSpeechConverter";
 
 export class ClientConnection{
 
@@ -13,12 +15,24 @@ export class ClientConnection{
             let io = require('socket.io').listen(server);
             io.sockets.on('connection', function (socket) {
                 socket.on('userMessage', async function (data) {
-                    Logger.debug(ClientConnection.getString(data));
-                    if(data.hasOwnProperty('body') && data.body.hasOwnProperty('message')){
-                        let userMessage: string = data.body.message;
+                    Logger.debug(Logger.getString(data));
+                    if(data.hasOwnProperty('body') && data.body.hasOwnProperty('message') && data.body.hasOwnProperty('userName')){
+
+                        let session: Session = Cache.getSession({userName: data.body.userName});
+                        if(isNullOrUndefined(session)){
+                            session = new Session({userName: data.body.userName});
+                            Cache.insertSession(session);
+                        }
+                        session.socket = socket;
+                        session.lastUserMessage = data.body.message;
 
                         //call the real stuff here (NLU, Action Mapping, Action Excecution, Response Creation)
-                        NLU.getNLUResponse(userMessage,socket);
+                        let NLUResponse: any = await NLU.getNLUResponse(session);
+                        let textResponse: string = NLUResponse.result.fulfillment.speech;
+                        let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
+                        session.lastServerMessage = textResponse;
+                        ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
+
 
 
                         // let speech: any = await CloudTextToSpeechConverter.getSpeech(NLUResponse.result.fulfillment.speech);
@@ -42,10 +56,7 @@ export class ClientConnection{
         }
     }
 
-    private static getString(data: any){
-        if(typeof data == "object"){
-            return JSON.stringify(data);
-        }
-        return data;
+    public static sendMessage(socket: any, message: any){
+        socket.emit('serverMessage', message);
     }
 }

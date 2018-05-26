@@ -1,26 +1,27 @@
-import {CloudTextToSpeechConverter} from "../SpeechConverstion/CloudTextToSpeechConverter";
+import {Session} from "../Session/Session";
+import {Logger} from "../Utils/Logger";
 
-var apiai = require('apiai');
+let secretsPath: string = process.env.ASSISTANT_SECRETS;
+let apiaiSecret: string = require(secretsPath)["api.ai-Secret"];
 
-var app = apiai('76b7790534dc47b99048c3238d7fe994');
+var apiai = require('apiai-promise');
+var app = apiai(apiaiSecret);
 
 export class NLU {
 
-    public static async getNLUResponse(text,socket){
-        var request = await app.textRequest(text, {
-            sessionId: 'dummySessionId'
-        });
+    public static async getNLUResponse(session: Session) {
+        try {
+            let text = session.lastUserMessage;
+            let response = await app.textRequest(text, {
+                sessionId: session.id
+            });
 
-         request.on('response', async function(response) {
-            console.log(response);
-             let speech: any = await CloudTextToSpeechConverter.getSpeech(response.result.fulfillment.speech);
-             socket.emit('serverMessage', {text: response.result.fulfillment.speech, message: speech});
-         });
-
-        request.on('error', function(error) {
-            console.log(error);
-        });
-
-        request.end();
+            Logger.debug(Logger.getString(response));
+            return response;
+        }
+        catch (err) {
+            Logger.error('Error getting NLU response');
+            throw err;
+        }
     }
 }
