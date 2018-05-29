@@ -12,12 +12,20 @@
     "apiai": "^4.0.3",
     "apiai-promise": "^1.0.0",
     "cookie-parser": "~1.4.3",
+    "current-time": "^1.0.1",
+    "dateformat": "^3.0.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",
+    "geo-tz": "^4.0.1",
+    "geocoder": "^0.2.3",
+    "get-timezone-offset": "^1.0.3",
     "http-errors": "~1.6.2",
     "jade": "~1.11.0",
     "morgan": "~1.9.0",
+    "node-geocoder": "^3.22.0",
     "socket.io": "^2.1.0",
-    "socket.io-client": "^2.1.0"
+    "socket.io-client": "^2.1.0",
+    "time": "^0.12.0",
+    "timezone-name-offsets": "^1.0.2"
   }
 }

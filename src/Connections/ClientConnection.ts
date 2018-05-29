@@ -6,6 +6,7 @@ import {Session} from "../Session/Session";
 import {Cache} from "../Cache/Cache";
 import {isNullOrUndefined} from "util";
 import {CloudTextToSpeechConverter} from "../SpeechConverstion/CloudTextToSpeechConverter";
+let actionMapping: any = require('../../actionMapping.json');
 
 export class ClientConnection{
 
@@ -27,12 +28,33 @@ export class ClientConnection{
                         session.lastUserMessage = data.body.message;
 
                         //call the real stuff here (NLU, Action Mapping, Action Excecution, Response Creation)
-                        let NLUResponse: any = await NLU.getNLUResponse(session);
-                        let textResponse: string = NLUResponse.result.fulfillment.speech;
-                        let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
-                        session.lastServerMessage = textResponse;
-                        ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
-
+                        try{
+                            let NLUResponse: any = await NLU.getNLUResponse(session);
+                            if(!NLUResponse.hasOwnProperty('result') || !NLUResponse.result.hasOwnProperty('metadata')){
+                                Logger.error('No result in NLU response')
+                                throw new Error('No result in NLU response');
+                            }
+                            if(NLUResponse.result.metadata.hasOwnProperty('intentName') && NLUResponse.result.metadata.intentName.split('.')[0]!='smalltalk'){
+                                if(actionMapping.hasOwnProperty(NLUResponse.result.metadata.intentName)){
+                                    session.intent = NLUResponse.result.metadata.intentName;
+                                    session.entities = NLUResponse.result.parameters;
+                                    let action = require('../Actions/'+actionMapping[session.intent])[actionMapping[session.intent]];
+                                    let textResponse : string = await action.execute(session);
+                                    let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
+                                    session.lastServerMessage = textResponse;
+                                    ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
+                                }
+                            }
+                            else if(NLUResponse.result.hasOwnProperty('action')){
+                                let textResponse: string = NLUResponse.result.fulfillment.speech;
+                                let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
+                                session.lastServerMessage = textResponse;
+                                ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
+                            }
+                        }
+                        catch(err){
+                            ClientConnection.sendMessage(socket,{textResponse: err});
+                        }
 
 
                         // let speech: any = await CloudTextToSpeechConverter.getSpeech(NLUResponse.result.fulfillment.speech);
