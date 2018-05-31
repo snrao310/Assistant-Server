@@ -21,11 +21,12 @@ export class SetAlarm{
             recurrence: recurrence
         };
         let response: any = {textResponse: "Done", clientJobs: clientJobs};
-        alarm(date, function() {
-            console.log('Hello, world! at '+date);
-            //play alarm here
-        });
-        return 'Done'
+        return response;
+        // alarm(date, function() {
+        //     console.log('Hello, world! at '+date);
+        //     //play alarm here
+        // });
+        // return 'Done'
     }
 
 }

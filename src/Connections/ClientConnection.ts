@@ -39,10 +39,12 @@ export class ClientConnection{
                                     session.intent = NLUResponse.result.metadata.intentName;
                                     session.entities = NLUResponse.result.parameters;
                                     let action = require('../Actions/'+actionMapping[session.intent])[actionMapping[session.intent]];
-                                    let textResponse : string = await action.execute(session);
+                                    let actionResponse : any = await action.execute(session);
+                                    let textResponse: string = actionResponse.textResponse;
                                     let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
                                     session.lastServerMessage = textResponse;
-                                    ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
+                                    actionResponse.speechResponse = speechResponse;
+                                    ClientConnection.sendMessage(socket,actionResponse);
                                 }
                             }
                             else if(NLUResponse.result.hasOwnProperty('action')){
