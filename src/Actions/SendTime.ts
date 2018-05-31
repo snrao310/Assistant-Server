@@ -31,7 +31,8 @@ export class SendTime{
                 let now = new Date();
                 let utc = now.getTime() + (now.getTimezoneOffset() * 60000);
                 let newTime = new Date(utc + (60000*offsets[timeZone]));
-                return dateFormat(newTime, 'h:MM TT');
+                let response: any = {textResponse: dateFormat(newTime, 'h:MM TT')};
+                return response;
             }
             catch(err){
                 Logger.error('Error while resolving time for remote location');

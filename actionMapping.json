@@ -1,3 +1,4 @@
 {
-  "time": "SendTime"
+  "time": "SendTime",
+  "alarm.set": "SetAlarm"
 }
