@@ -21,7 +21,8 @@ export class SendTime{
     public static async execute(session: Session){
         let address = this.getAddress(session);
         if(address === ''){
-            return dateFormat(new Date(), 'h:M TT');
+            let response: any = {textResponse: dateFormat(new Date(), 'h:MM TT')};
+            return response;
         }
         else{
             try{

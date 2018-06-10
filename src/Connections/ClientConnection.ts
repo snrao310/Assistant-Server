@@ -34,17 +34,43 @@ export class ClientConnection{
                                 Logger.error('No result in NLU response')
                                 throw new Error('No result in NLU response');
                             }
-                            if(NLUResponse.result.metadata.hasOwnProperty('intentName') && NLUResponse.result.metadata.intentName.split('.')[0]!='smalltalk'){
-                                if(actionMapping.hasOwnProperty(NLUResponse.result.metadata.intentName)){
-                                    session.intent = NLUResponse.result.metadata.intentName;
-                                    session.entities = NLUResponse.result.parameters;
-                                    let action = require('../Actions/'+actionMapping[session.intent])[actionMapping[session.intent]];
-                                    let actionResponse : any = await action.execute(session);
-                                    let textResponse: string = actionResponse.textResponse;
+                            if(NLUResponse.result.metadata.hasOwnProperty('intentName')){
+                                let intentName: string = NLUResponse.result.metadata.intentName;
+                                let intentAndFollowup: string[] = intentName.split('-');
+                                if(intentAndFollowup.length>2){
+                                    Logger.error('Invalid intent NLU response')
+                                    throw new Error('Invalid intent in NLU response');
+                                }
+
+                                //Followup intent for repeating previous message.
+                                if(intentAndFollowup[intentAndFollowup.length-1].trim() === 'repeat'){
+                                    let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(session.lastServerMessage);
+                                    let clientResponse: any = {textResponse: session.lastServerMessage, speechResponse: speechResponse};
+                                    ClientConnection.sendMessage(socket,clientResponse);
+                                }
+
+
+                                else if(intentName.split('.')[0]!='smalltalk'){
+                                    intentName = intentAndFollowup[0].trim();
+                                    if(actionMapping.hasOwnProperty(intentName)){
+                                        session.intent = intentName;
+                                        session.entities = NLUResponse.result.parameters;
+                                        let action = require('../Actions/'+actionMapping[session.intent])[actionMapping[session.intent]];
+                                        let actionResponse : any = await action.execute(session);
+                                        let textResponse: string = actionResponse.textResponse;
+                                        let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
+                                        session.lastServerMessage = textResponse;
+                                        actionResponse.speechResponse = speechResponse;
+                                        ClientConnection.sendMessage(socket,actionResponse);
+                                    }
+                                }
+
+                                //smalltalk intents defined by me. Like "what is your name?"
+                                else if(NLUResponse.result.hasOwnProperty('action')){
+                                    let textResponse: string = NLUResponse.result.fulfillment.speech;
                                     let speechResponse: any = await CloudTextToSpeechConverter.getSpeech(textResponse);
                                     session.lastServerMessage = textResponse;
-                                    actionResponse.speechResponse = speechResponse;
-                                    ClientConnection.sendMessage(socket,actionResponse);
+                                    ClientConnection.sendMessage(socket,{textResponse: textResponse, speechResponse: speechResponse});
                                 }
                             }
                             else if(NLUResponse.result.hasOwnProperty('action')){

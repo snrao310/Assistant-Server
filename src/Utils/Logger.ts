@@ -15,7 +15,7 @@ export class Logger{
 
     public static getString(data: any){
         if(typeof data == "object"){
-            return JSON.stringify(data);
+            return JSON.stringify(data,null,2);
         }
         return data;
     }
